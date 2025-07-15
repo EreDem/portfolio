@@ -1,0 +1,7 @@
+Add further features:
+    Doors
+    Infotexts?
+
+Add rooms:
+ Create different rooms by creating different object lists 
+ put objects and objectlist in different file for readability 
