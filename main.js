@@ -1,57 +1,155 @@
 // get canvas element
 const canvas = document.getElementById("canvas");
+canvas.style.imageRendering = "pixelated";
 const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
 
 // Set size of the canvas
 canvas.width = window.innerWidth - 10;
 canvas.height = window.innerHeight - 10;
 
-// temporary player object
-const player = {
+canvas.style.width = `${window.innerWidth - 10}px`;
+canvas.style.height = `${window.innerHeight - 10}px`;
+
+// for future usage in code
+const windowW = window.innerWidth;
+const windowH = window.innerHeight;
+
+// get all player sprites
+const spriteIdle = new Image();
+spriteIdle.src = "imgs/idleSprite.png";
+const spriteRight1 = new Image();
+spriteRight1.src = "imgs/spriteRight1.png";
+const spriteRight2 = new Image();
+spriteRight2.src = "imgs/spriteRight2.png";
+const spriteLeft1 = new Image();
+spriteLeft1.src = "imgs/spriteLeft1.png";
+const spriteLeft2 = new Image();
+spriteLeft2.src = "imgs/spriteLeft2.png";
+const spriteJumpRight = new Image();
+spriteJumpRight.src = "imgs/spriteJumpRight.png";
+const spriteJumpLeft = new Image();
+spriteJumpLeft.src = "imgs/spriteJumpLeft.png";
+
+// variable to control which sprite is drawn
+let currentSprite = spriteIdle;
+
+// player hitbox
+const playerHitBox = {
   x: 50,
   y: 50,
-  width: 50,
-  height: 50,
-  color: "blue",
+  width: 48,
+  height: 84,
+  color: "rgba(0, 0, 0, 0.0)",
 };
 // temporary object
 const objectFloor = {
-  x: 50,
-  y: 800,
-  width: 1000,
+  x: 0,
+  y: 600,
+  width: windowW,
   height: 10,
   color: "red",
+  collidable: true,
 };
 // temporary object
 const object = {
   x: 300,
-  y: 700,
+  y: 500,
   width: 500,
   height: 10,
   color: "green",
+  collidable: true,
 };
 // temporary object
 const object2 = {
   x: 600,
-  y: 500,
+  y: 300,
   width: 10,
   height: 300,
   color: "yellow",
+  collidable: true,
+};
+const roomTwo = [objectFloor];
+const doorObject = {
+  x: 1000,
+  y: 500,
+  width: 70,
+  height: 100,
+  color: "yellow",
+  objectType: "door",
+  leadsTo: roomTwo,
+  collidable: false,
 };
 
 // Keep list of all Objects in room for collision detection
-const objects = [objectFloor, object, object2];
+// switch rooms by switching current object list
+const roomOne = [objectFloor, object, object2, doorObject];
+let objects = roomOne;
+
+// function to manage/switch between player sprites
+// global variable to give sprites time before switching
+let spriteClock = 30;
+function spriteManager(moving_left, moving_right, jump_allowed) {
+  spriteClock--;
+  console.log(spriteClock);
+  // reset spriteclock
+  if (spriteClock <= 0) spriteClock = 30;
+  // Check if we need the jump sprites
+  if (jump_allowed) {
+    // player on floor
+    if (moving_left) {
+      // switch between sprites
+      // clock decides which one
+      if (currentSprite == spriteLeft1 && spriteClock >= 15)
+        currentSprite = spriteLeft2;
+      else if (spriteClock < 15) currentSprite = spriteLeft1;
+    }
+    if (moving_right) {
+      // switch between sprites
+      // clock decides which one
+      if (currentSprite == spriteRight1 && spriteClock >= 15)
+        currentSprite = spriteRight2;
+      else if (spriteClock < 15) currentSprite = spriteRight1;
+    } else if (!movingLeft && !movingRight) {
+      currentSprite = spriteIdle;
+    }
+  } else if (!jump_allowed) {
+    // player in air
+    if (moving_left) {
+      currentSprite = spriteJumpLeft;
+    } else {
+      currentSprite = spriteJumpRight;
+    }
+  }
+}
 
 // function to draw scene
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height); // clear the canvas
-  ctx.fillStyle = player.color; // set player color
-  ctx.fillRect(player.x, player.y, player.width, player.height); // draw player
   //   for loop to draw all objects
   for (let obj of objects) {
     ctx.fillStyle = obj.color; // set object color
     ctx.fillRect(obj.x, obj.y, obj.width, obj.height); // draw object
   }
+  ctx.fillStyle = playerHitBox.color; // set player color
+  // draw player
+  ctx.fillRect(
+    playerHitBox.x,
+    playerHitBox.y,
+    playerHitBox.width,
+    playerHitBox.height
+  );
+  ctx.drawImage(
+    currentSprite,
+    0,
+    0,
+    32,
+    32,
+    playerHitBox.x - 18,
+    playerHitBox.y - 12,
+    96,
+    96
+  );
 }
 
 // #region game logic
@@ -75,10 +173,10 @@ document.addEventListener("keydown", (event) => {
       jumping = true; // move up
       break;
     case "ArrowLeft":
-      movingRight = true; // move left
+      movingLeft = true; // move left
       break;
     case "ArrowRight":
-      movingLeft = true; // move right
+      movingRight = true; // move right
       break;
   }
 });
@@ -86,21 +184,23 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("keyup", (event) => {
   switch (event.key) {
     case "ArrowLeft":
-      movingRight = false; // stop moving left
+      movingLeft = false; // stop moving left
       break;
     case "ArrowRight":
-      movingLeft = false; // stop moving right
+      movingRight = false; // stop moving right
       break;
   }
 });
 
 function update() {
+  // update player sprite
+  spriteManager(movingLeft, movingRight, jumpAllowed);
   // update player position based on input
   if (movingLeft) {
-    player.x += 5; // move left
+    playerHitBox.x -= 5; // move left
   }
   if (movingRight) {
-    player.x -= 5; // move right
+    playerHitBox.x += 5; // move right
   }
   if (jumping && jumpAllowed) {
     gravity *= -1; // jump up
@@ -119,55 +219,63 @@ function update() {
   }
 
   // apply gravity
-  player.y += gravity;
+  playerHitBox.y += gravity;
 
   // check for collision with the object
   for (let obj of objects) {
     // Check for collision on the x-axis
     if (
-      (player.x > obj.x && player.x <= obj.x + obj.width) ||
-      (player.x + player.width >= obj.x &&
-        player.x + player.width <= obj.x + obj.width)
+      (playerHitBox.x > obj.x && playerHitBox.x <= obj.x + obj.width) ||
+      (playerHitBox.x + playerHitBox.width >= obj.x &&
+        playerHitBox.x + playerHitBox.width <= obj.x + obj.width)
     ) {
       // check for collision on the y-axis from above
       if (
-        player.y + player.height + gravity >= obj.y &&
-        player.y + gravity < obj.y
+        playerHitBox.y + playerHitBox.height + gravity >= obj.y &&
+        playerHitBox.y + gravity < obj.y
       ) {
-        player.y = obj.y - player.height; // place player on top of the object
-        jumpAllowed = true; // allow jumping again
+        // Not all objects should be collidable
+        if (obj.collidable) {
+          playerHitBox.y = obj.y - playerHitBox.height; // place player on top of the object
+          jumpAllowed = true; // allow jumping again
+        } else if (obj.objectType == "door") objects = obj.leadsTo;
       }
       // check for collision on the y-axis from below
       else if (
-        player.y - 50 <= obj.y + obj.height &&
-        player.y + player.height >= obj.y + obj.height &&
+        playerHitBox.y - 50 <= obj.y + obj.height &&
+        playerHitBox.y + playerHitBox.height >= obj.y + obj.height &&
         jumping
       ) {
-        player.y = obj.y + obj.height; // place player below the object
-        console.log("collided from below");
-        jumpHeight = 0;
+        if (obj.collidable) {
+          playerHitBox.y = obj.y + obj.height; // place player below the object
+          jumpHeight = 0;
+        } else if (obj.objectType == "door") objects = obj.leadsTo;
       }
     }
     // do same for vertical collision
     // Check for collision on the y-axis
     if (
-      (player.y > obj.y && player.y <= obj.y + obj.height) ||
-      (player.y + player.height >= obj.y &&
-        player.y + player.height <= obj.y + obj.height)
+      (playerHitBox.y > obj.y && playerHitBox.y <= obj.y + obj.height) ||
+      (playerHitBox.y + playerHitBox.height >= obj.y &&
+        playerHitBox.y + playerHitBox.height <= obj.y + obj.height)
     ) {
       // check for collision on the x-axis from the left
       if (
-        player.x + player.width + 5 > obj.x &&
-        player.x + 5 < obj.x
+        playerHitBox.x + playerHitBox.width + 5 > obj.x &&
+        playerHitBox.x + 5 < obj.x
       ) {
-        player.x = obj.x - player.width; // place player to the left of the object
+        if (obj.collidable) playerHitBox.x = obj.x - playerHitBox.width;
+        // place player to the left of the object
+        else if (obj.objectType == "door") objects = obj.leadsTo;
       }
       // check for collision on the x-axis from the right
       else if (
-        player.x - 5 < obj.x + obj.width &&
-        player.x + player.width > obj.x + obj.width
+        playerHitBox.x - 5 < obj.x + obj.width &&
+        playerHitBox.x + playerHitBox.width > obj.x + obj.width
       ) {
-        player.x = obj.x + obj.width; // place player to the right of the object
+        if (obj.collidable) playerHitBox.x = obj.x + obj.width;
+        // place player to the right of the object
+        else if (obj.objectType == "door") objects = obj.leadsTo;
       }
     }
   }
