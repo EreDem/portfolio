@@ -31,8 +31,14 @@ spriteJumpLeft.src = "imgs/spriteJumpLeft.png";
 let currentSprite = spriteIdle;
 
 // get backgrounds for rooms
-const backgroundStartRoom = new Image();
+let backgroundStartRoom = new Image();
 backgroundStartRoom.src = "imgs/backgroundStartRoom.png";
+
+let backgroundProjectRoom = new Image();
+backgroundProjectRoom.src = "imgs/backgroundProjectRoom.png";
+console.log(backgroundProjectRoom);
+let currentBackground = backgroundStartRoom;
+console.log(currentBackground);
 
 // player hitbox
 const playerHitBox = {
@@ -43,64 +49,80 @@ const playerHitBox = {
   color: "rgba(0, 0, 0, 0)",
 };
 // create objects and room
-floorObject = {
+const floorObject = {
   x: 0,
   y: 162,
   width: 320,
   height: 30,
   color: "rgba(00, 0, 0, 0.0)",
   collidable: true, // can collide with player
-}
-deskObject = {
+};
+const deskObject = {
   x: 26,
   y: 139,
   width: 65,
   height: 2,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
-}
-shelfObject = {
+};
+const shelfObject = {
   x: 221,
   y: 114,
   width: 39,
   height: 2,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
-}
-wallShelfObject = {
+};
+const wallShelfObject = {
   x: 105,
   y: 78,
   width: 74,
   height: 3,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
-}
-objects = [floorObject, deskObject, shelfObject, wallShelfObject]; 
+};
+const doorProjects = {
+  x: 280,
+  y: 125,
+  width: 20,
+  height: 36,
+  color: "rgba(0,0,0,0)",
+  collidable: false,
+};
+let startRoom = [
+  floorObject,
+  deskObject,
+  shelfObject,
+  wallShelfObject,
+  doorProjects,
+];
+let projectsRoom = [floorObject];
+
+let currentRoom = startRoom;
 
 // function to manage/switch between player sprites
 // global variable to give sprites time before switching
-let spriteClock = 30;
+let spriteClock = 20;
 function spriteManager(moving_left, moving_right, jump_allowed) {
   spriteClock--;
-  console.log(spriteClock);
   // reset spriteclock
-  if (spriteClock <= 0) spriteClock = 30;
+  if (spriteClock <= 0) spriteClock = 20;
   // Check if we need the jump sprites
   if (jump_allowed) {
     // player on floor
     if (moving_left) {
       // switch between sprites
       // clock decides which one
-      if (currentSprite == spriteLeft1 && spriteClock >= 15)
+      if (currentSprite == spriteLeft1 && spriteClock >= 10)
         currentSprite = spriteLeft2;
-      else if (spriteClock < 15) currentSprite = spriteLeft1;
+      else if (spriteClock < 10) currentSprite = spriteLeft1;
     }
     if (moving_right) {
       // switch between sprites
       // clock decides which one
-      if (currentSprite == spriteRight1 && spriteClock >= 15)
+      if (currentSprite == spriteRight1 && spriteClock >= 10)
         currentSprite = spriteRight2;
-      else if (spriteClock < 15) currentSprite = spriteRight1;
+      else if (spriteClock < 10) currentSprite = spriteRight1;
     } else if (!movingLeft && !movingRight) {
       currentSprite = spriteIdle;
     }
@@ -118,10 +140,10 @@ function spriteManager(moving_left, moving_right, jump_allowed) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height); // clear the canvas
   // draw background
-  ctx.drawImage(backgroundStartRoom, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
   // draw all objects
   //   for loop to draw all objects
-  for (let obj of objects) {
+  for (let obj of currentRoom) {
     ctx.fillStyle = obj.color; // set object color
     ctx.fillRect(obj.x, obj.y, obj.width, obj.height); // draw object
   }
@@ -139,8 +161,8 @@ function draw() {
     0,
     32,
     32,
-    playerHitBox.x -6,
-    playerHitBox.y -4 ,
+    playerHitBox.x - 6,
+    playerHitBox.y - 4,
     32,
     32
   );
@@ -152,13 +174,12 @@ function draw() {
 // movement variables
 let movingLeft = false;
 let movingRight = false;
-let speedBoost = 1.5;
 // jumping variables
 let jumping = false;
 let jumpAllowed = false; // allow jumping only when on the ground
-let jumpHeight = 50; // height of the jump
+let jumpHeight = 20; // height of the jump
 // gravity variable
-let gravity = 2;
+let gravity = 4;
 
 // Add event listener for keydown events
 document.addEventListener("keydown", (event) => {
@@ -194,14 +215,12 @@ function update() {
     // stop moving when leaving the screen
     if (playerHitBox.x <= 0) {
       playerHitBox.x = 0; // prevent going off screen
-    }
-    else playerHitBox.x -= 2; // move left
+    } else playerHitBox.x -= 2; // move left
   }
   if (movingRight) {
     if (playerHitBox.x + playerHitBox.width >= 320) {
       playerHitBox.x = 320 - playerHitBox.height; // prevent going off screen
-    }
-    else {
+    } else {
       playerHitBox.x += 2; // move right
     }
   }
@@ -215,7 +234,7 @@ function update() {
     if (jumpHeight == 0) {
       jumping = false; // stop jumping
       gravity *= -1; // reset gravity
-      jumpHeight = 50; // reset jump height
+      jumpHeight = 20; // reset jump height
     } else {
       jumpHeight -= 1; // decrease jump height
     }
@@ -225,7 +244,7 @@ function update() {
   playerHitBox.y += gravity;
 
   // check for collision with the object
-  for (let obj of objects) {
+  for (let obj of currentRoom) {
     // Check for collision on the x-axis
     if (
       (playerHitBox.x > obj.x && playerHitBox.x <= obj.x + obj.width) ||
@@ -241,7 +260,12 @@ function update() {
         if (obj.collidable) {
           playerHitBox.y = obj.y - playerHitBox.height; // place player on top of the object
           jumpAllowed = true; // allow jumping again
-        } else if (obj.objectType == "door") objects = obj.leadsTo;
+        } else if (obj === doorProjects) {
+          currentRoom = projectsRoom;
+          console.log(currentBackground);
+          currentBackground = backgroundProjectRoom;
+          console.log(currentBackground);
+        }
       }
       // check for collision on the y-axis from below
       // else if (
