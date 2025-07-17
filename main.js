@@ -37,7 +37,7 @@ backgroundStartRoom.src = "imgs/backgroundStartRoom.png";
 let backgroundProjectRoom = new Image();
 backgroundProjectRoom.src = "imgs/backgroundProjectRoom.png";
 console.log(backgroundProjectRoom);
-let currentBackground = backgroundStartRoom;
+let currentBackground = backgroundProjectRoom;
 console.log(currentBackground);
 
 // player hitbox
@@ -49,6 +49,11 @@ const playerHitBox = {
   color: "rgba(0, 0, 0, 0)",
 };
 // create objects and room
+// initialize rooms
+let startRoom = []; // start room objects
+let projectsRoom = []; // projects room objects
+
+// objects in the start room
 const floorObject = {
   x: 0,
   y: 162,
@@ -56,6 +61,7 @@ const floorObject = {
   height: 30,
   color: "rgba(00, 0, 0, 0.0)",
   collidable: true, // can collide with player
+  type: "obj"
 };
 const deskObject = {
   x: 26,
@@ -64,6 +70,7 @@ const deskObject = {
   height: 2,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
+  type: "obj"
 };
 const shelfObject = {
   x: 221,
@@ -72,6 +79,7 @@ const shelfObject = {
   height: 2,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
+  type: "obj"
 };
 const wallShelfObject = {
   x: 105,
@@ -80,6 +88,7 @@ const wallShelfObject = {
   height: 3,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
+  type: "obj"
 };
 const doorProjects = {
   x: 280,
@@ -88,17 +97,30 @@ const doorProjects = {
   height: 36,
   color: "rgba(0,0,0,0)",
   collidable: false,
+  type: "door",
+  leadsTo: projectsRoom // leads to projects room
 };
-let startRoom = [
+startRoom = [
   floorObject,
   deskObject,
   shelfObject,
   wallShelfObject,
   doorProjects,
 ];
-let projectsRoom = [floorObject];
 
-let currentRoom = startRoom;
+// objects in the projects room
+const sitexObject = {
+  x: 90,
+  y: 130,
+  width: 20,
+  height: 31,
+  color: "rgba(100, 0, 0, 0.5)",
+  collidable: false, // can collide with player
+  type: "hologram"
+};
+projectsRoom = [floorObject, sitexObject];
+
+let currentRoom = projectsRoom;
 
 // function to manage/switch between player sprites
 // global variable to give sprites time before switching
@@ -139,6 +161,8 @@ function spriteManager(moving_left, moving_right, jump_allowed) {
 // function to draw scene
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height); // clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   // draw background
   ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
   // draw all objects
@@ -310,10 +334,18 @@ function update() {
 // #endregion
 
 // region rendering
+
+// cap frames per second
+let lastTime = 0;
+const frameDuration= 1000 / 60; // 60 FPS
+
 // game loop
-function gameLoop() {
-  update(); // update game state
-  draw(); // draw the scene
+function gameLoop(timstamp) {
+  if (timstamp - lastTime >= frameDuration) {
+    update(); // update game state
+    draw(); // draw the scene
+    lastTime = timstamp; // update lastTime to current timestamp
+  }
   requestAnimationFrame(gameLoop); // call gameLoop again for the next frame
 }
 
