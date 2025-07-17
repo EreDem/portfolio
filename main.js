@@ -5,15 +5,11 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 
 // Set size of the canvas
-canvas.width = window.innerWidth - 10;
-canvas.height = window.innerHeight - 10;
-
-canvas.style.width = `${window.innerWidth - 10}px`;
-canvas.style.height = `${window.innerHeight - 10}px`;
-
-// for future usage in code
-const windowW = window.innerWidth;
-const windowH = window.innerHeight;
+canvas.width = 320;
+canvas.height = 180;
+// fit to display size
+canvas.style.width = `${window.innerWidth}px`;
+canvas.style.height = `${window.innerHeight}px`;
 
 // get all player sprites
 const spriteIdle = new Image();
@@ -38,53 +34,12 @@ let currentSprite = spriteIdle;
 const playerHitBox = {
   x: 50,
   y: 50,
-  width: 48,
-  height: 84,
+  width: 32,
+  height: 32,
   color: "rgba(0, 0, 0, 0.0)",
 };
-// temporary object
-const objectFloor = {
-  x: 0,
-  y: 600,
-  width: windowW,
-  height: 10,
-  color: "red",
-  collidable: true,
-};
-// temporary object
-const object = {
-  x: 300,
-  y: 500,
-  width: 500,
-  height: 10,
-  color: "green",
-  collidable: true,
-};
-// temporary object
-const object2 = {
-  x: 600,
-  y: 300,
-  width: 10,
-  height: 300,
-  color: "yellow",
-  collidable: true,
-};
-const roomTwo = [objectFloor];
-const doorObject = {
-  x: 1000,
-  y: 500,
-  width: 70,
-  height: 100,
-  color: "yellow",
-  objectType: "door",
-  leadsTo: roomTwo,
-  collidable: false,
-};
-
-// Keep list of all Objects in room for collision detection
-// switch rooms by switching current object list
-const roomOne = [objectFloor, object, object2, doorObject];
-let objects = roomOne;
+objects = [];
+// create objects and room
 
 // function to manage/switch between player sprites
 // global variable to give sprites time before switching
@@ -145,10 +100,10 @@ function draw() {
     0,
     32,
     32,
-    playerHitBox.x - 18,
-    playerHitBox.y - 12,
-    96,
-    96
+    playerHitBox.x,
+    playerHitBox.y,
+    32,
+    32
   );
 }
 
