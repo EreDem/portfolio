@@ -36,9 +36,11 @@ backgroundStartRoom.src = "imgs/backgroundStartRoom.png";
 
 let backgroundProjectRoom = new Image();
 backgroundProjectRoom.src = "imgs/backgroundProjectRoom.png";
-console.log(backgroundProjectRoom);
-let currentBackground = backgroundProjectRoom;
-console.log(currentBackground);
+
+let backgroundSitex = new Image();
+backgroundSitex.src = "imgs/backgroundSitex.png";
+
+let currentBackground = backgroundStartRoom;
 
 // player hitbox
 const playerHitBox = {
@@ -52,7 +54,6 @@ const playerHitBox = {
 // initialize rooms
 let startRoom = []; // start room objects
 let projectsRoom = []; // projects room objects
-
 // objects in the start room
 const floorObject = {
   x: 0,
@@ -61,7 +62,7 @@ const floorObject = {
   height: 30,
   color: "rgba(00, 0, 0, 0.0)",
   collidable: true, // can collide with player
-  type: "obj"
+  type: "obj",
 };
 const deskObject = {
   x: 26,
@@ -70,7 +71,7 @@ const deskObject = {
   height: 2,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
-  type: "obj"
+  type: "obj",
 };
 const shelfObject = {
   x: 221,
@@ -79,7 +80,7 @@ const shelfObject = {
   height: 2,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
-  type: "obj"
+  type: "obj",
 };
 const wallShelfObject = {
   x: 105,
@@ -88,7 +89,7 @@ const wallShelfObject = {
   height: 3,
   color: "rgba(0, 0, 0, 0.0)",
   collidable: true, // can collide with player
-  type: "obj"
+  type: "obj",
 };
 const doorProjects = {
   x: 280,
@@ -98,7 +99,8 @@ const doorProjects = {
   color: "rgba(0,0,0,0)",
   collidable: false,
   type: "door",
-  leadsTo: projectsRoom // leads to projects room
+  leadsTo: "projectsRoom",
+  leadsToBackground: backgroundProjectRoom, // leads to projects room
 };
 startRoom = [
   floorObject,
@@ -107,20 +109,31 @@ startRoom = [
   wallShelfObject,
   doorProjects,
 ];
-
+const doorStart = {
+  x: 30,
+  y: 125,
+  width: 5,
+  height: 36,
+  color: "rgba(0,0,0,0)",
+  collidable: false,
+  type: "door",
+  leadsTo: "startRoom",
+  leadsToBackground: backgroundStartRoom, // leads to projects room
+};
 // objects in the projects room
 const sitexObject = {
   x: 90,
   y: 130,
   width: 20,
   height: 31,
-  color: "rgba(100, 0, 0, 0.5)",
+  color: "rgba(0, 0, 0, 0)",
   collidable: false, // can collide with player
-  type: "hologram"
+  type: "hologram",
+  background: backgroundSitex,
 };
-projectsRoom = [floorObject, sitexObject];
+projectsRoom = [floorObject, sitexObject, doorStart];
 
-let currentRoom = projectsRoom;
+let currentRoom = startRoom;
 
 // function to manage/switch between player sprites
 // global variable to give sprites time before switching
@@ -269,66 +282,48 @@ function update() {
 
   // check for collision with the object
   for (let obj of currentRoom) {
-    // Check for collision on the x-axis
+    // collision from top to not fall through objects
     if (
-      (playerHitBox.x > obj.x && playerHitBox.x <= obj.x + obj.width) ||
-      (playerHitBox.x + playerHitBox.width >= obj.x &&
-        playerHitBox.x + playerHitBox.width <= obj.x + obj.width)
+      playerHitBox.y + playerHitBox.height + 4 > obj.y &&
+      playerHitBox.y < obj.y
     ) {
-      // check for collision on the y-axis from above
       if (
-        playerHitBox.y + playerHitBox.height + gravity >= obj.y &&
-        playerHitBox.y + gravity < obj.y
+        (playerHitBox.x > obj.x ||
+          playerHitBox.x + playerHitBox.width > obj.x) &&
+        playerHitBox.x < obj.x + obj.width
       ) {
-        // Not all objects should be collidable
         if (obj.collidable) {
-          playerHitBox.y = obj.y - playerHitBox.height; // place player on top of the object
-          jumpAllowed = true; // allow jumping again
-        } else if (obj === doorProjects) {
-          currentRoom = projectsRoom;
-          console.log(currentBackground);
-          currentBackground = backgroundProjectRoom;
-          console.log(currentBackground);
+          playerHitBox.y = obj.y - playerHitBox.height;
+          jumpAllowed = true;
         }
       }
-      // check for collision on the y-axis from below
-      // else if (
-      //   playerHitBox.y - 50 <= obj.y + obj.height &&
-      //   playerHitBox.y + playerHitBox.height >= obj.y + obj.height &&
-      //   jumping
-      // ) {
-      //   if (obj.collidable) {
-      //     playerHitBox.y = obj.y + obj.height; // place player below the object
-      //     jumpHeight = 0;
-      //   } else if (obj.objectType == "door") objects = obj.leadsTo;
-      // }
     }
-    // do same for vertical collision
-    // Check for collision on the y-axis
-    // if (
-    //   (playerHitBox.y > obj.y && playerHitBox.y <= obj.y + obj.height) ||
-    //   (playerHitBox.y + playerHitBox.height >= obj.y &&
-    //     playerHitBox.y + playerHitBox.height <= obj.y + obj.height)
-    // ) {
-    //   // check for collision on the x-axis from the left
-    //   if (
-    //     playerHitBox.x + playerHitBox.width + 5 > obj.x &&
-    //     playerHitBox.x + 5 < obj.x
-    //   ) {
-    //     if (obj.collidable) playerHitBox.x = obj.x - playerHitBox.width;
-    //     // place player to the left of the object
-    //     else if (obj.objectType == "door") objects = obj.leadsTo;
-    //   }
-    //   // check for collision on the x-axis from the right
-    //   else if (
-    //     playerHitBox.x - 5 < obj.x + obj.width &&
-    //     playerHitBox.x + playerHitBox.width > obj.x + obj.width
-    //   ) {
-    //     if (obj.collidable) playerHitBox.x = obj.x + obj.width;
-    //     // place player to the right of the object
-    //     else if (obj.objectType == "door") objects = obj.leadsTo;
-    //   }
-    // }
+    // collision on x axis is only necessary for doors and holograms
+    if (
+      playerHitBox.x + playerHitBox.width + 2 > obj.x &&
+      playerHitBox.x < obj.x
+    ) {
+      if (
+        (playerHitBox.y > obj.y ||
+          playerHitBox.y + playerHitBox.height > obj.y) &&
+        playerHitBox.y < obj.y + obj.height
+      ) {
+        if (!obj.collidable) {
+          // change room & background when colliding with door
+          if (obj.type == "door") {
+            if (obj.leadsTo == "projectsRoom") currentRoom = projectsRoom;
+            if (obj.leadsTo == "startRoom") currentRoom = startRoom;
+            currentBackground = obj.leadsToBackground;
+          }
+          // change background when colliding with hologram
+          if (obj.type == "hologram") {
+            currentBackground == obj.background
+              ? (currentBackground = backgroundProjectRoom)
+              : (currentBackground = obj.background);
+          }
+        }
+      }
+    }
   }
 }
 // #endregion
@@ -337,7 +332,7 @@ function update() {
 
 // cap frames per second
 let lastTime = 0;
-const frameDuration= 1000 / 60; // 60 FPS
+const frameDuration = 1000 / 60; // 60 FPS
 
 // game loop
 function gameLoop(timstamp) {
